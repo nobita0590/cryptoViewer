@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Crypto viewer</title>
+    <link href="https://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/iris-ws.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+<div id="app">
+	<div class="bd-example">
+		<main class="mt-3">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>name</th>
+                    <th>price_btc</th>
+                    <th>price_usd</th>
+                    <th>price_vnd</th>
+                    <th>last_updated</th>
+                    <th>max_supply</th>
+                    <th>percent_change_1h</th>
+                    <th>percent_change_7d</th>
+                    <th>percent_change_24h</th>
+					<th>symbol</th>
+					<th>total_supply</th>
+                </tr>
+                </thead>
+                <tbody>
+					<tr v-for="currency in currencies">
+                        <td>{{currency.name}}</td>
+                        <td>{{currency.price_btc}}</td>
+                        <td>{{currency.price_usd}}</td>
+                        <td>{{currency.price_vnd}}</td>
+                        <td>{{currency.last_updated}}</td>
+                        <td>{{currency.max_supply}}</td>
+                        <td>{{currency.percent_change_1h}}</td>
+                        <td>{{currency.percent_change_7d}}</td>
+                        <td>{{currency.percent_change_24h}}</td>
+                        <td>{{currency.symbol}}</td>
+                        <td>{{currency.total_supply}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</main>
+	</div>
+</div>
+<script>
+    var scheme = document.location.protocol == "https:" ? "wss" : "ws";
+    var port = document.location.port ? (":" + document.location.port) : "";
+    // see app.Get("/echo", ws.Handler()) on main.go
+    var wsURL = scheme + "://" + document.location.hostname + port+"/echo";
+
+    // Ws comes from the auto-served '/iris-ws.js'
+    var socket = new Ws(wsURL);
+    socket.OnConnect(function () {
+        //output.innerHTML += "Status: Connected\n";
+    });
+
+    socket.OnDisconnect(function () {
+        //output.innerHTML += "Status: Disconnected\n";
+        setTimeout(function() {
+            socket = new Ws(wsURL)
+        });
+    });
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            currencies: []
+        },
+        methods: {
+            img: function (currency) {
+                return 'https://files.coinmarketcap.com/generated/sparklines/'+currency.rank+'.png?d='+(+new Date());
+            }
+        }
+    });
+    socket.On("data", function (_d) {
+        _d = JSON.parse(_d)
+        app._data.currencies = _d;
+    });
+
+</script>
+</body>
+</html>
+
